@@ -7,7 +7,7 @@ import csv
 
 
 class VideoFinder():
-    def __init__(self, channel_url, search_playlist_title="", video_title_split=False):
+    def __init__(self, channel_url, search_playlist_title="", video_title_split=()):
         self.channel_url = channel_url.rstrip("/") + "/"
         self.browser = webdriver.Chrome(ChromeDriverManager().install())
         self.search_url = "https://www.youtube.com/results?search_query="
@@ -27,20 +27,17 @@ class VideoFinder():
             for index, playlist_title in enumerate(playlist_titles):
                 print(f"{index}: {playlist_title.text}")
             reply = int(input("Which video you want? "))
-            for index, playlist_title in enumerate(playlist_titles):
-                if index == reply:
-                    playlist_title.click()
-            self.search_playlist_title = playlist_titles[reply].text
-            print(f"Clicked {self.search_playlist_title}")
+            playlist_titles[reply].click()
+            print(f"Clicked playlist")
         playlist_items = WebDriverWait(self.browser, 20).until(
             EC.presence_of_all_elements_located((By.ID, "playlist-items"))
         )
         for playlist_item in playlist_items:
             item_title = playlist_item.find_element_by_id(
                 "video-title").text
-            if self.video_title_split:
-                item_title.split(self.video_title_split[0])[
-                    self.video_title_split[1]]
+            if len(self.video_title_split) != 0:
+                index = self.video_title_split[1]
+                item_title = item_title.split(self.video_title_split[0])[index]
             item_titles.append(item_title)
             print(f"Found {item_title}")
         file = open("video-links.csv", mode="w")
@@ -52,7 +49,7 @@ class VideoFinder():
                 "thumbnail").get_attribute("href")
             writer.writerow([item_title, video_link])
             print(f"Writed {item_title}: {video_link}")
-        print(f"Finished {self.search_playlist_title}")
+        print(f"Finished {self.search_playlist_title}!")
 
     def finish(self):
         self.browser.quit()
